@@ -1,0 +1,47 @@
+@using staccato
+@section scripts {
+    <script src="/js/home.js" type="text/javascript"></script>
+}
+
+<div class="page-header">
+    <h1>Now Playing: <small data-bind="text: name"></small></h1>
+</div>
+<div class="row">
+    <div class="span10">
+        <audio id="player" autoplay controls preload></audio>
+    </div>
+    <div class="span2">
+        <a data-bind="attr: { href: download }" class="btn btn-success" style="display: block;">Download</a>
+    </div>
+</div>
+
+<h3>Song Search</h3>
+<form class="row" data-bind="submit: search">
+    <div class="span10">
+        <input type="text" class="input-block-level" placeholder="Search Terms" data-bind="value: searchTerms" />
+    </div>
+    <div class="span2">
+        <input type="submit" class="btn btn-primary input-block-level" value="Search" style="width: 100%;" />
+    </div>
+</form>
+<table class="table table-condensed" style="margin-top: 10px;">
+    <tbody data-bind="foreach: searchResults">
+        <tr>
+            <td style="vertical-align: middle; width: 80%;"><a href="#" data-bind="text: Name, click: $parent.changeSong"></a></td>
+            <td><a href="#" class="btn btn-primary">Request</a></td>
+            <td><a data-bind="attr: { href: Download }" class="btn btn-success">Download</a></td>
+        </tr>
+    </tbody>
+</table>
+<div data-bind="visible: hasSearched">
+    <div data-bind="visible: searchResults().length == 0" class="muted">No results</div>
+    <div data-bind="visible: totalPages() > 1" class="pagination">
+        <ul>
+            <li data-bind="css: { disabled: page() == 1 }"><a href="#" data-bind="click: previousPage">«</a></li>
+            <!-- ko foreach: pages -->
+            <li data-bind="css: { active: $parent.page() == $data }"><a href="#" data-bind="text: $data, click: $parent.specificPage"></a></li>
+            <!-- /ko -->
+            <li data-bind="css: { disabled: page() == totalPages() }"><a href="#" data-bind="click: nextPage">»</a></li>
+        </ul>
+    </div>
+</div>

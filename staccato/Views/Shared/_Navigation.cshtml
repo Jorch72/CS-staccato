@@ -1,0 +1,11 @@
+@using staccato
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="brand" href="/">Staccato</a>
+            <div class="pull-right" style="line-height: 40px;">
+                Now playing @(Directory.GetFiles(Program.Configuration.MusicPath).Length) songs!
+            </div>
+        </div>
+    </div>
+</div>

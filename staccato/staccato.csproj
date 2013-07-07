@@ -32,10 +32,84 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="Griffin.Networking">
+      <HintPath>..\externals\WebSharp\lib\Griffin.Networking.dll</HintPath>
+    </Reference>
+    <Reference Include="Griffin.Networking.Protocol.Http">
+      <HintPath>..\externals\WebSharp\lib\Griffin.Networking.Protocol.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=c7439020c8fedf87">
+      <Private>False</Private>
+      <Package>monodevelop</Package>
+    </Reference>
+    <Reference Include="taglib-sharp">
+      <HintPath>..\lib\taglib-sharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Controllers\IndexController.cs" />
+    <Compile Include="MusicRunner.cs" />
+    <Compile Include="Configuration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\externals\WebSharp\WebSharp\WebSharp.csproj">
+      <Project>{52F6D83C-5D34-43AC-9249-ABB9471432C7}</Project>
+      <Name>WebSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\externals\WebSharp\WebSharp.MVC\WebSharp.MVC.csproj">
+      <Project>{87E9AFC2-B2CE-4214-AFEE-55BCF5F8254B}</Project>
+      <Name>WebSharp.MVC</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="Static\" />
+    <Folder Include="Static\css\" />
+    <Folder Include="Static\js\" />
+    <Folder Include="Views\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Static\css\base.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\css\bootstrap.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\css\bootstrap-responsive.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\css\syntax.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\js\bootstrap.min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\_ViewStart.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Index\Index.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Shared\_Layout.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Shared\_Navigation.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\js\knockout-2.2.1.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\js\home.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\js\jquery-2.0.3.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\js\underscore-min.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
