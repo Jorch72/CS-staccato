@@ -68,8 +68,9 @@ namespace staccato
             var song = PlayNextSong();
             SkipRequests.Clear();
             StartTime = DateTime.Now;
-            Console.WriteLine("Now playing: {0} ({1}:{2})", song.Name, song.Duration.Minutes, song.Duration.Seconds);
+            Console.WriteLine("Now playing: {0} ({1}:{2})", song.Name, song.Duration.Minutes, song.Duration.Seconds.ToString("00"));
             UpdateListeners();
+            Timer.Change(Timeout.Infinite, Timeout.Infinite);
             Timer = new Timer(Tick, null, (int)(song.Duration).TotalMilliseconds, Timeout.Infinite);
         }
 
