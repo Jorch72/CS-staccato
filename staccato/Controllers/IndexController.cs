@@ -9,6 +9,7 @@ namespace staccato
     {
         public ActionResult Index()
         {
+            MusicRunner.UpdateListener(Request.RemoteEndPoint);
             return View();
         }
 
@@ -19,7 +20,10 @@ namespace staccato
             {
                 song = MusicRunner.NowPlaying,
                 seek = (DateTime.Now - MusicRunner.StartTime).TotalSeconds,
-                queue = MusicRunner.MasterQueue.Take(8)
+                queue = MusicRunner.MasterQueue.Take(8),
+                skipsRequested = MusicRunner.SkipRequestsIssued,
+                skipsRequired = MusicRunner.SkipRequestsRequired,
+                listeners = MusicRunner.Listeners
             });
         }
 
@@ -54,6 +58,19 @@ namespace staccato
                 return Json(new { success = false });
             MusicRunner.QueueUserSong(song);
             return Json(new { success = true, queue = MusicRunner.MasterQueue.Take(8) });
+        }
+
+        public ActionResult RequestSkip()
+        {
+            return Json(new
+            {
+                success = MusicRunner.RequestSkip(Request.RemoteEndPoint),
+                song = MusicRunner.NowPlaying,
+                queue = MusicRunner.MasterQueue.Take(8),
+                seek = (DateTime.Now - MusicRunner.StartTime).TotalSeconds,
+                skipsRequested = MusicRunner.SkipRequestsIssued,
+                skipsRequired = MusicRunner.SkipRequestsRequired
+            });
         }
     }
 }

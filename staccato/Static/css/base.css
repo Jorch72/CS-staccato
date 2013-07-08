@@ -33,3 +33,7 @@ a.small {
 .user-added {
     font-weight: bold;
 }
+
+.no-group a {
+    color: #888;
+}

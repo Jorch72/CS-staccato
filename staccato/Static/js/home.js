@@ -14,6 +14,10 @@ function PageViewModel () {
     self.hasSearched = ko.observable(false);
     self.queue = ko.observableArray([]);
     self.groupPlay = ko.observable(true);
+    self.skipsRequested = ko.observable(0);
+    self.skipsRequired = ko.observable(1);
+    self.skipRequested = ko.observable(false);
+    self.listeners = ko.observable(1);
     
     self.getNowPlaying = function() {
         $.get('/nowplaying', function(data) {
@@ -25,6 +29,8 @@ function PageViewModel () {
             self.queue(data.queue);
             seek = data.seek;
             changeStream(data.song.Stream, true);
+            self.skipRequested(false);
+            self.listeners(data.listeners);
         });
     };
     
@@ -104,7 +110,42 @@ function PageViewModel () {
     self.refreshQueue = function() {
         $.get('/nowplaying', function(data) {
             self.queue(data.queue);
-            setTimeout(self.refreshQueue, 15000);
+            self.skipsRequested(data.skipsRequested);
+            self.skipsRequired(data.skipsRequired);
+            self.listeners(data.listeners);
+            if (self.groupPlay() && self.name() != data.song.Name) {
+                // Song skipped
+                adjustSync = true;
+                self.name(data.song.Name);
+                self.download(data.song.Download);
+                self.stream(data.song.Stream);
+                seek = data.seek;
+                changeStream(data.song.Stream, true);
+                self.skipRequested(false);
+            }
+            setTimeout(self.refreshQueue, 5000);
+        });
+    };
+    setTimeout(self.refreshQueue, 5000);
+    
+    self.requestSkip = function() {
+        self.skipRequested(true);
+        $.post('/requestSkip', { }, function(data) {
+            if (data.success) {
+                adjustSync = true;
+                self.name(data.song.Name);
+                self.download(data.song.Download);
+                self.stream(data.song.Stream);
+                self.queue(data.queue);
+                seek = data.seek;
+                self.skipRequested(false);
+                self.skipsRequested(data.skipsRequested);
+                self.skipsRequired(data.skipsRequired);
+                changeStream(data.song.Stream, true);
+            } else {
+                self.skipsRequested(data.skipsRequested);
+                self.skipsRequired(data.skipsRequired);
+            }
         });
     };
 }
@@ -131,7 +172,6 @@ $(function() {
     });
 
     viewModel.getNowPlaying();
-    setTimeout(viewModel.refreshQueue, 15000);
     ko.applyBindings(viewModel);
 });
 

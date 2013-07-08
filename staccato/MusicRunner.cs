@@ -17,6 +17,7 @@ namespace staccato
             AutoQueue = new ConcurrentQueue<Song>();
             UserQueue = new ConcurrentQueue<Song>();
             ActiveListeners = new List<Tuple<string, DateTime>>();
+            SkipRequests = new List<string>();
             Listeners = 0;
             Timer = new Timer(Tick);
             for (int i = 0; i < 10; i++)
@@ -31,12 +32,29 @@ namespace staccato
         private static Timer Timer { get; set; }
         private static Random Random { get; set; }
         private static List<Tuple<string, DateTime>> ActiveListeners { get; set; }
+        private static List<string> SkipRequests { get; set; }
 
         public static Song[] MasterQueue
         {
             get
             {
                 return UserQueue.ToArray().Concat(AutoQueue.ToArray()).ToArray();
+            }
+        }
+
+        public static int SkipRequestsIssued
+        {
+            get
+            {
+                return SkipRequests.Count;
+            }
+        }
+
+        public static int SkipRequestsRequired
+        {
+            get
+            {
+                return (int)Math.Ceiling(Listeners * Program.Configuration.SkipThreshold);
             }
         }
 
@@ -48,6 +66,7 @@ namespace staccato
         private static void Tick(object discarded)
         {
             var song = PlayNextSong();
+            SkipRequests.Clear();
             StartTime = DateTime.Now.AddSeconds(3);
             Console.WriteLine("Now playing: {0} ({1}:{2})", song.Name, song.Duration.Minutes, song.Duration.Seconds);
             UpdateListeners();
@@ -58,7 +77,7 @@ namespace staccato
         {
             foreach (var listener in ActiveListeners.ToArray())
             {
-                if (listener.Item2.AddMinutes(10) < DateTime.Now)
+                if (listener.Item2.AddMinutes(1) < DateTime.Now)
                     ActiveListeners.Remove(listener);
             }
             Listeners = ActiveListeners.Count;
@@ -71,6 +90,22 @@ namespace staccato
             listener = new Tuple<string, DateTime>(remoteEndPoint.Address.ToString(), DateTime.Now);
             ActiveListeners.Add(listener);
             Listeners = ActiveListeners.Count;
+        }
+
+        public static bool RequestSkip(IPEndPoint remoteEndPoint)
+        {
+            if (((StartTime + NowPlaying.Duration) - DateTime.Now).TotalSeconds < 10)
+                return false;
+            if (SkipRequests.Contains(remoteEndPoint.Address.ToString()))
+                return false;
+            SkipRequests.Add(remoteEndPoint.Address.ToString());
+            if (SkipRequestsIssued >= SkipRequestsRequired)
+            {
+                Console.WriteLine("Skipping {0}", NowPlaying.Name);
+                Tick(null);
+                return true;
+            }
+            return false;
         }
 
         public static Song PlayNextSong()

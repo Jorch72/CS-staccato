@@ -5,7 +5,7 @@
             <a class="brand" href="/">Staccato</a>
             <div class="pull-right" style="line-height: 40px;">
                 Now playing @(Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3").Length) songs for
-                @(MusicRunner.Listeners) listener@(MusicRunner.Listeners == 1 ? "" : "s")!
+                <span data-bind="text: listeners"></span> listener<span data-bind="visible: listeners() != 1">s</span>!
             </div>
         </div>
     </div>
