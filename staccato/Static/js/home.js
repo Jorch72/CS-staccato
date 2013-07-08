@@ -1,3 +1,6 @@
+var seek = 0;
+var adjustSync = true;
+
 function PageViewModel () {
     var self = this;
     self.name = ko.observable('');
@@ -9,15 +12,36 @@ function PageViewModel () {
     self.totalPages = ko.observable(1);
     self.searchResults = ko.observableArray([]);
     self.hasSearched = ko.observable(false);
+    self.queue = ko.observableArray([]);
+    self.groupPlay = ko.observable(true);
     
     self.getNowPlaying = function() {
         $.get('/nowplaying', function(data) {
-            self.name(data.Name);
-            self.download(data.Download);
-            self.stream(data.Stream);
-            changeStream(data.Stream);
+            adjustSync = true;
+            self.groupPlay(true);
+            self.name(data.song.Name);
+            self.download(data.song.Download);
+            self.stream(data.song.Stream);
+            self.queue(data.queue);
+            seek = data.seek;
+            changeStream(data.song.Stream, true);
         });
     };
+    
+    self.prepareNext = function() {
+        if (!self.groupPlay())
+            return;
+        $.get('/nowplaying', function(data) {
+            adjustSync = true;
+            self.groupPlay(true);
+            self.name(data.song.Name);
+            self.download(data.song.Download);
+            self.stream(data.song.Stream);
+            self.queue(data.queue);
+            seek = data.seek;
+            changeStream(data.song.Stream, false);
+        });
+    }
     
     self.search = function() {
         self.page(1);
@@ -59,22 +83,45 @@ function PageViewModel () {
     };
     
     self.changeSong = function(data, event) {
+        seek = 0;
         self.stream(data.Stream);
         self.name(data.Name);
         self.download(data.Download);
-        changeStream(data.Stream);
+        self.groupPlay(false);
+        adjustSync = false;
+        changeStream(data.Stream, true);
     };
 }
 
 $(function() {
     var viewModel = new PageViewModel();
+
+    var player = document.getElementById('player');
+    player.addEventListener('loadedmetadata', function() {
+        if (adjustSync) {
+            if (seek < 0) {
+                setTimeout((-seek) * 1000, function() {
+                    player.currentTime = seek;
+                    player.play();
+                });
+            }
+            else {
+                player.currentTime = seek;
+            }
+        }
+    });
+    player.addEventListener('ended', function() {
+        viewModel.prepareNext();
+    });
+
     viewModel.getNowPlaying();
     ko.applyBindings(viewModel);
 });
 
-function changeStream(source) {
+function changeStream(source, start) {
     player = document.getElementById('player');
     player.src = source;
     player.load();
-    player.play();
+    if (start)
+        player.play();
 }

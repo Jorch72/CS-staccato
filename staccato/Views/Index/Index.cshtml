@@ -3,32 +3,47 @@
     <script src="/js/home.js" type="text/javascript"></script>
 }
 
-<div class="page-header">
-    <h1>Now Playing: <small data-bind="text: name"></small></h1>
-</div>
 <div class="row">
-    <div class="span10">
-        <audio id="player" autoplay controls preload></audio>
+    <div class="span6">
+        <h2>Queue</h2>
+        <table class="table table-condensed" data-bind="foreach: queue">
+            <tr>
+                <td><a class="queue-item" data-bind="text: Name, click: $parent.changeSong, attr: { title: Name }, css: { 'user-added': UserAdded }" href="#"></a></td>
+            </tr>
+        </table>
     </div>
-    <div class="span2">
-        <a data-bind="attr: { href: download }" class="btn btn-success" style="display: block;">Download</a>
+    <div class="span6">
+        <h2>Now Playing</h2>
+        <audio id="player" autoplay controls preload></audio>
+        <p class="lead" data-bind="text: name, attr: { title: name }"></p>
+        <div class="row">
+            <span class="span2">
+                <a data-bind="attr: { href: download }" class="btn btn-success" style="display: block;">Download</a>
+            </span>
+            <span class="span2">
+                <a class="btn btn-warning input-block-level" href="#">Vote to Skip</a>
+            </span>
+            <span class="span2">
+            <a class="btn btn-info input-block-level" data-bind="visible: !groupPlay(), click: getNowPlaying" href="#">Rejoin Group</a>
+            </span>
+        </div>
+        <h3>Song Search</h3>
+        <form class="row" data-bind="submit: search">
+            <div class="span4">
+                <input type="text" class="input-block-level" placeholder="Search Terms" data-bind="value: searchTerms" />
+            </div>
+            <div class="span2">
+                <input type="submit" class="btn btn-primary input-block-level" value="Search" style="width: 100%;" />
+            </div>
+        </form>
     </div>
 </div>
 
-<h3>Song Search</h3>
-<form class="row" data-bind="submit: search">
-    <div class="span10">
-        <input type="text" class="input-block-level" placeholder="Search Terms" data-bind="value: searchTerms" />
-    </div>
-    <div class="span2">
-        <input type="submit" class="btn btn-primary input-block-level" value="Search" style="width: 100%;" />
-    </div>
-</form>
 <table class="table table-condensed" style="margin-top: 10px;">
     <tbody data-bind="foreach: searchResults">
         <tr>
             <td style="vertical-align: middle; width: 80%;"><a href="#" data-bind="text: Name, click: $parent.changeSong"></a></td>
-            <td><a href="#" class="btn btn-primary">Request</a></td>
+            <td><a href="#" class="btn btn-info" data-bind="attr: { disabled: !CanRequest }">Request</a></td>
             <td><a data-bind="attr: { href: Download }" class="btn btn-success">Download</a></td>
         </tr>
     </tbody>

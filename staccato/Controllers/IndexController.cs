@@ -14,7 +14,12 @@ namespace staccato
 
         public ActionResult NowPlaying()
         {
-            return Json(MusicRunner.NowPlaying);
+            return Json(new
+            {
+                song = MusicRunner.NowPlaying,
+                seek = (DateTime.Now - MusicRunner.StartTime).TotalSeconds,
+                queue = MusicRunner.MasterQueue.Take(8)
+            });
         }
 
         public ActionResult Search(string query, int page)
@@ -32,14 +37,10 @@ namespace staccato
                         Name = Path.GetFileNameWithoutExtension(f),
                         Download = "/download/" + Path.GetFileName(f),
                         Stream = Path.GetFileName(f),
+                        CanRequest = !MusicRunner.MasterQueue.Any(s => s.Name.Equals(Path.GetFileNameWithoutExtension(f)))
                     }).ToArray(),
                 totalPages = files.Count() / 10
             });
-        }
-
-        public ActionResult Playlist()
-        {
-            return null;
         }
 
         public ActionResult Queue(string song)

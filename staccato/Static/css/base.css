@@ -10,3 +10,26 @@ audio {
 .pagination {
     text-align: center;
 }
+
+.lead {
+    margin-bottom: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+a.small {
+    font-size: 10pt;
+}
+
+.queue-item {
+    max-width: 460px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    display: block;
+}
+
+.user-added {
+    font-weight: bold;
+}

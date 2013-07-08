@@ -27,7 +27,7 @@ namespace staccato
 
             var httpd = new HttpServer();
             var router = new HttpRouter();
-            httpd.LogRequests = true;
+            httpd.LogRequests = Configuration.LogRequests;
             httpd.Request = router.Route;
 
             var staticContent = new StaticContentHandler(Configuration.MusicPath);
@@ -47,7 +47,7 @@ namespace staccato
             }));
 
             MusicRunner.Start();
-            httpd.Start(new IPEndPoint(IPAddress.Any, 8888));
+            httpd.Start(new IPEndPoint(IPAddress.Parse(Configuration.EndPoint), Configuration.Port));
 
             Console.WriteLine("Press 'q' to exit.");
             ConsoleKeyInfo cki;
