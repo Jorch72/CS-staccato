@@ -14,6 +14,7 @@ namespace staccato
 
         public ActionResult NowPlaying()
         {
+            MusicRunner.UpdateListener(Request.RemoteEndPoint);
             return Json(new
             {
                 song = MusicRunner.NowPlaying,
@@ -25,7 +26,7 @@ namespace staccato
         public ActionResult Search(string query, int page)
         {
             query = query.Replace('+', ' ').ToUpper(); // TODO: WebSharp should probably handle this
-            var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3", SearchOption.AllDirectories)
+            var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3")
                 .OrderBy(Path.GetFileNameWithoutExtension)
                 .Where(f => Path.GetFileNameWithoutExtension(f).ToUpper().Contains(query)).ToArray();
 
@@ -43,9 +44,16 @@ namespace staccato
             });
         }
 
-        public ActionResult Queue(string song)
+        public ActionResult RequestSong(string song)
         {
-            return null;
+            if (song.Contains(Path.DirectorySeparatorChar))
+                return Json(new { success = false });
+            song = song.Replace('+', ' ');
+            song = Path.Combine(Program.Configuration.MusicPath, song + ".mp3");
+            if (!File.Exists(song))
+                return Json(new { success = false });
+            MusicRunner.QueueUserSong(song);
+            return Json(new { success = true, queue = MusicRunner.MasterQueue.Take(8) });
         }
     }
 }

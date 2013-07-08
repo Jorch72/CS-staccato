@@ -43,7 +43,7 @@
     <tbody data-bind="foreach: searchResults">
         <tr>
             <td style="vertical-align: middle; width: 80%;"><a href="#" data-bind="text: Name, click: $parent.changeSong"></a></td>
-            <td><a href="#" class="btn btn-info" data-bind="attr: { disabled: !CanRequest }">Request</a></td>
+            <td><a href="#" class="btn btn-info" data-bind="attr: { disabled: !CanRequest }, click: $parent.requestSong">Request</a></td>
             <td><a data-bind="attr: { href: Download }" class="btn btn-success">Download</a></td>
         </tr>
     </tbody>

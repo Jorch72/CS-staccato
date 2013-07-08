@@ -4,6 +4,8 @@ using System.IO;
 using System.Collections.Concurrent;
 using TagLib.Mpeg;
 using System.Threading;
+using System.Collections.Generic;
+using System.Net;
 
 namespace staccato
 {
@@ -14,6 +16,8 @@ namespace staccato
             Random = new Random();
             AutoQueue = new ConcurrentQueue<Song>();
             UserQueue = new ConcurrentQueue<Song>();
+            ActiveListeners = new List<Tuple<string, DateTime>>();
+            Listeners = 0;
             Timer = new Timer(Tick);
             for (int i = 0; i < 10; i++)
                 QueueRandomSong();
@@ -23,8 +27,10 @@ namespace staccato
         public static ConcurrentQueue<Song> UserQueue { get; set; }
         public static ConcurrentQueue<Song> AutoQueue { get; set; }
         public static DateTime StartTime { get; private set; }
+        public static int Listeners { get; private set; }
         private static Timer Timer { get; set; }
         private static Random Random { get; set; }
+        private static List<Tuple<string, DateTime>> ActiveListeners { get; set; }
 
         public static Song[] MasterQueue
         {
@@ -44,7 +50,27 @@ namespace staccato
             var song = PlayNextSong();
             StartTime = DateTime.Now.AddSeconds(3);
             Console.WriteLine("Now playing: {0} ({1}:{2})", song.Name, song.Duration.Minutes, song.Duration.Seconds);
+            UpdateListeners();
             Timer = new Timer(Tick, null, (int)(song.Duration).TotalMilliseconds, Timeout.Infinite);
+        }
+
+        static void UpdateListeners()
+        {
+            foreach (var listener in ActiveListeners.ToArray())
+            {
+                if (listener.Item2.AddMinutes(10) < DateTime.Now)
+                    ActiveListeners.Remove(listener);
+            }
+            Listeners = ActiveListeners.Count;
+        }
+
+        public static void UpdateListener(IPEndPoint remoteEndPoint)
+        {
+            var listener = ActiveListeners.SingleOrDefault(l => l.Item1.Equals(remoteEndPoint.Address.ToString()));
+            ActiveListeners.Remove(listener);
+            listener = new Tuple<string, DateTime>(remoteEndPoint.Address.ToString(), DateTime.Now);
+            ActiveListeners.Add(listener);
+            Listeners = ActiveListeners.Count;
         }
 
         public static Song PlayNextSong()

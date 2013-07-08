@@ -91,6 +91,22 @@ function PageViewModel () {
         adjustSync = false;
         changeStream(data.Stream, true);
     };
+    
+    self.requestSong = function(data, event) {
+        $.post('/requestSong', {
+            song: data.Name
+        }, function(data) {
+            $(this).attr('disabled', 'disabled');
+            self.queue(data.queue);
+        });
+    };
+    
+    self.refreshQueue = function() {
+        $.get('/nowplaying', function(data) {
+            self.queue(data.queue);
+            setTimeout(self.refreshQueue, 15000);
+        });
+    };
 }
 
 $(function() {
@@ -100,10 +116,10 @@ $(function() {
     player.addEventListener('loadedmetadata', function() {
         if (adjustSync) {
             if (seek < 0) {
-                setTimeout((-seek) * 1000, function() {
+                setTimeout(function() {
                     player.currentTime = seek;
                     player.play();
-                });
+                }, -seek * 1000);
             }
             else {
                 player.currentTime = seek;
@@ -115,6 +131,7 @@ $(function() {
     });
 
     viewModel.getNowPlaying();
+    setTimeout(viewModel.refreshQueue, 15000);
     ko.applyBindings(viewModel);
 });
 
