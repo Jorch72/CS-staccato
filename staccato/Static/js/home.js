@@ -46,6 +46,8 @@ function PageViewModel () {
             self.queue(data.queue);
             seek = data.seek;
             changeStream(data.song.Stream, false);
+            self.skipRequested(false);
+            self.listeners(data.listeners);
         });
     }
     
