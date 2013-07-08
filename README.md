@@ -2,7 +2,7 @@
 
 An online music player for sharing music with your friends.
 
-![Staccato](http://i.imgur.com/NuQc0b9.png)
+![Staccato](http://i.imgur.com/WyTb5aS.png)
 
 ## Setting Up
 
