@@ -181,7 +181,8 @@ namespace staccato
 
         public static void QueueRandomSong()
         {
-            var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3", SearchOption.AllDirectories)
+                .Where(r => !MasterQueue.Any(s => s.Name == Path.GetFileNameWithoutExtension(r))).ToArray();
             QueueSong(files[Random.Next(files.Length)]);
         }
 
