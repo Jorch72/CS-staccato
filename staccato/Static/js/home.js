@@ -291,7 +291,7 @@ $(function() {
         if (e.keyCode == 32) { // space
            viewModel.togglePlayback();
         }
-        if (!viewModel.groupPlay() && e.keyCode == 114) { // r
+        if (e.keyCode == 114) { // r
             viewModel.getNowPlaying();
         }
     });
