@@ -70,6 +70,7 @@
     <Folder Include="Static\css\" />
     <Folder Include="Static\js\" />
     <Folder Include="Views\" />
+    <Folder Include="Static\img\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Static\css\base.css">
@@ -112,6 +113,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Static\favicon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\img\glyphicons-halflings.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Static\img\glyphicons-halflings-white.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -12,6 +12,7 @@ namespace staccato
             SkipThreshold = 0.51;
             MaximumRequestsPerUser = 3;
             RequestLimitResetMinutes = 60;
+            MinimumMinutesBetweenUploads = 60;
         }
 
         public string MusicPath { get; set; }
@@ -21,6 +22,7 @@ namespace staccato
         public double SkipThreshold { get; set; }
         public int MaximumRequestsPerUser { get; set; }
         public int RequestLimitResetMinutes { get; set; }
+        public int MinimumMinutesBetweenUploads { get; set; }
     }
 }
 

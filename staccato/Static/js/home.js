@@ -1,5 +1,21 @@
+if (!String.prototype.endsWith) {
+    Object.defineProperty(String.prototype, 'endsWith', {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: function (searchString, position) {
+            position = position || this.length;
+            position = position - searchString.length;
+            return this.lastIndexOf(searchString) === position;
+        }
+    });
+}
+
 var seek = 0;
+var updateDelay = 10000;
 var adjustSync = true;
+var fileData = null;
+var partLength = null;
 
 function PageViewModel () {
     var self = this;
@@ -19,6 +35,11 @@ function PageViewModel () {
     self.skipRequested = ko.observable(false);
     self.listeners = ko.observable(1);
     self.announcement = ko.observable('');
+    self.uploadError = ko.observable('');
+    self.fileName = ko.observable('');
+    self.uploadReady = ko.observable(false);
+    self.uploading = ko.observable(false);
+    self.uploadSuccess = ko.observable(false);
     
     self.getNowPlaying = function() {
         $.get('/nowplaying', function(data) {
@@ -130,10 +151,10 @@ function PageViewModel () {
                 changeStream(data.song.Stream, true);
                 self.skipRequested(false);
             }
-            setTimeout(self.refreshQueue, 5000);
+            setTimeout(self.refreshQueue, updateDelay);
         });
     };
-    setTimeout(self.refreshQueue, 5000);
+    setTimeout(self.refreshQueue, updateDelay);
     
     self.requestSkip = function() {
         self.skipRequested(true);
@@ -162,11 +183,76 @@ function PageViewModel () {
         }
         self.groupPlay(false);
     };
+    
+    self.uploadSong = function() {
+        if (!self.uploadReady())
+            return;
+        self.uploading(true);
+        $.post('/canUpload', {
+            filename: self.fileName()
+        }, function(data) {
+            if (!data.success) {
+                self.uploadReady(false);
+                self.uploading(false);
+                self.fileName('');
+                fileData = null;
+                self.uploadError(data.reason);
+            } else {
+                // Upload song
+                fileData = fileData.substring(fileData.indexOf(',') + 1); // Seek to start of base64 data
+                $.post('/startUpload', {
+                    filename: self.fileName(),
+                    length64: fileData.length
+                }, function(r) {
+                    if (!r.success) {
+                        self.uploadReady(false);
+                        self.uploading(false);
+                        self.fileName('');
+                        fileData = null;
+                        self.uploadError(r.reason);
+                    } else {
+                        partLength = r.partLength;
+                        var chunk = fileData.substring(0, partLength);
+                        fileData = fileData.substring(partLength);
+                        $.post('/uploadPart', {
+                            part: chunk
+                        }, self.recursiveUpload);
+                    }
+                });
+            }
+        });
+    };
+    
+    self.recursiveUpload = function(data) {
+        if (!data.success) {
+            self.uploadReady(false);
+            self.uploading(false);
+            self.fileName('');
+            fileData = null;
+            self.uploadError(data.reason);
+            return;
+        }
+        if (data.complete) {
+            self.uploadReady(false);
+            self.uploading(false);
+            self.fileName('');
+            self.uploadSuccess('Upload complete!');
+            fileData = null;
+            return;
+        }
+        var chunk = fileData.substring(0, partLength);
+        fileData = fileData.substring(partLength);
+        console.log('Sending ' + chunk.length + ' byte chunk, ' + fileData.length + ' bytes remain.');
+        $.post('/uploadPart', {
+            part: chunk
+        }, self.recursiveUpload);
+    };
 }
 
 $(function() {
     var viewModel = new PageViewModel();
 
+    // Register audio player events
     var player = document.getElementById('player');
     player.addEventListener('loadedmetadata', function() {
         if (adjustSync) {
@@ -181,17 +267,23 @@ $(function() {
             }
         }
     });
+    
     player.addEventListener('ended', function() {
         viewModel.prepareNext();
     });
+    
     player.addEventListener('volumechange', function() {
         console.log(player.volume);
         createCookie('volume', player.volume);
     });
+    
+    // Load desired volume
     var desiredVolume = readCookie('volume');
     if (desiredVolume != null) {
         player.volume = desiredVolume;
     }
+    
+    // Register for keyboard shortcuts
     document.body.addEventListener('keypress', function(e) {
         if (document.activeElement.tagName == 'INPUT')
             return;
@@ -203,10 +295,50 @@ $(function() {
             viewModel.getNowPlaying();
         }
     });
-
+    
+    // File upload event handlers
+    var upload = document.getElementById('upload-target');
+    upload.addEventListener('dragenter', function(e) {
+        noopHandler(e);
+        $(e.target).addClass('file-hovering');
+    }, false);
+    upload.addEventListener('dragexit', function(e) {
+        noopHandler(e);
+        $(e.target).removeClass('file-hovering');
+    }, false);
+    upload.addEventListener('dragover', noopHandler, false);
+    upload.addEventListener('drop', function(e) {
+        noopHandler(e);
+        $(e.target).removeClass('file-hovering');
+        if (viewModel.uploading())
+            return;
+        viewModel.uploadSuccess(false);
+        if (event.dataTransfer.files.length != 1) {
+            viewModel.uploadError('Please upload exactly one mp3 file.');
+        }
+        else if (!event.dataTransfer.files[0].name.endsWith('.mp3')) {
+            viewModel.uploadError('Please upload only mp3 files.');
+        } else {
+            viewModel.uploadError('');
+            viewModel.fileName(event.dataTransfer.files[0].name);
+            var reader = new FileReader();
+            reader.onloadend = function(result) {
+                viewModel.uploadReady(true);
+                fileData = result.target.result;
+            };
+            reader.readAsDataURL(event.dataTransfer.files[0]);
+        }
+    }, false);
+    
+    // Get now playing and bind everything up
     viewModel.getNowPlaying();
     ko.applyBindings(viewModel);
 });
+
+function noopHandler(e) {
+    e.stopPropagation();
+    e.preventDefault();
+}
 
 function changeStream(source, start) {
     player = document.getElementById('player');

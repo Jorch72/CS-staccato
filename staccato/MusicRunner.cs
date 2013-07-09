@@ -19,6 +19,7 @@ namespace staccato
             ActiveListeners = new List<Tuple<string, DateTime>>();
             SkipRequests = new List<string>();
             UserRequests = new Dictionary<string, List<DateTime>>();
+            UploadTimes = new Dictionary<string, DateTime>();
             Listeners = 0;
             Timer = new Timer(Tick);
             for (int i = 0; i < 10; i++)
@@ -36,6 +37,7 @@ namespace staccato
         private static List<Tuple<string, DateTime>> ActiveListeners { get; set; }
         private static List<string> SkipRequests { get; set; }
         private static Dictionary<string, List<DateTime>> UserRequests { get; set; }
+        private static Dictionary<string, DateTime> UploadTimes { get; set; }
 
         public static Song[] MasterQueue
         {
@@ -203,6 +205,16 @@ namespace staccato
                     UserRequests[user].Remove(item);
             }
             return UserRequests[user].Count < Program.Configuration.MaximumRequestsPerUser;
+        }
+
+        public static int MinutesUntilNextUpload(IPEndPoint remoteEndPoint)
+        {
+            if (!UploadTimes.ContainsKey(remoteEndPoint.Address.ToString()))
+                return 0;
+            var minutes = (UploadTimes[remoteEndPoint.Address.ToString()].AddMinutes(Program.Configuration.MinimumMinutesBetweenUploads) - DateTime.Now).TotalMinutes;
+            if (minutes <= 0)
+                return 0;
+            return (int)minutes;
         }
     }
 

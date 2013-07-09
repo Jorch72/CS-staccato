@@ -2,11 +2,15 @@ using System;
 using System.Linq;
 using WebSharp.MVC;
 using System.IO;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace staccato
 {
     public class IndexController : Controller
     {
+        public const int UploadedPartLength = 16384; // 16K per chunk
+
         public ActionResult Index()
         {
             MusicRunner.UpdateListener(Request.RemoteEndPoint);
@@ -77,6 +81,80 @@ namespace staccato
                 skipsRequested = MusicRunner.SkipRequestsIssued,
                 skipsRequired = MusicRunner.SkipRequestsRequired
             });
+        }
+
+        public static Regex SongNameRegex = new Regex("^.{3,50} - .{3,50}\\.mp3$", RegexOptions.Compiled);
+        public ActionResult CanUpload(string filename)
+        {
+            filename = filename.Replace('+', ' ');
+            if (Uploads.ContainsKey(Request.RemoteEndPoint.Address.ToString()))
+                return Json(new { success = false, reason = "One upload at a time, please." });
+            if (filename.Contains(Path.DirectorySeparatorChar))
+                return Json(new { success = false, reason = "Invalid filename." });
+            if (!SongNameRegex.IsMatch(filename))
+                return Json(new { success = false, reason = "File name is not in \"Artist Name - Song Title.mp3\" format." });
+            if (File.Exists(Path.Combine(Program.Configuration.MusicPath, filename)))
+                return Json(new { success = false, reason = "This song is already in our library." });
+            var minutes = MusicRunner.MinutesUntilNextUpload(Request.RemoteEndPoint);
+            if (minutes > 0)
+                return Json(new { success = false, reason = string.Format("You need to wait another {0} minutes before you can upload again.", minutes) });
+
+            return Json(new { success = true });
+        }
+
+        public ActionResult StartUpload(string filename, long length64)
+        {
+            filename = filename.Replace('+', ' ');
+            if (Uploads.ContainsKey(Request.RemoteEndPoint.Address.ToString()))
+                return Json(new { success = false, reason = "One upload at a time, please." });
+            if (length64 > 104857600) // 100 MB
+                return Json(new { success = false, reason = "File too large." });
+            if (filename.Contains(Path.DirectorySeparatorChar))
+                return Json(new { success = false, error = "Invalid filename." });
+            if (!SongNameRegex.IsMatch(filename))
+                return Json(new { success = false, error = "File name is not in \"Artist Name - Song Title.mp3\" format." });
+            if (File.Exists(Path.Combine(Program.Configuration.MusicPath, filename)))
+                return Json(new { success = false, error = "This song is already in our library." });
+            var minutes = MusicRunner.MinutesUntilNextUpload(Request.RemoteEndPoint);
+            if (minutes < 0)
+                return Json(new { success = false, error = string.Format("You need to wait another {0} minutes before you can upload again.", minutes) });
+            Uploads.Add(Request.RemoteEndPoint.Address.ToString(), new UploadInProgress
+            {
+                PartialData = string.Empty,
+                Filename = filename,
+                FinalLength = length64
+            });
+            return Json(new { success = true, partLength = UploadedPartLength });
+        }
+
+        public ActionResult UploadPart(string part)
+        {
+            if (!Uploads.ContainsKey(Request.RemoteEndPoint.Address.ToString()))
+                return Json(new { success = false, reason = "You don't have any active uploads!" });
+            var upload = Uploads[Request.RemoteEndPoint.Address.ToString()];
+            if (part.Length > UploadedPartLength)
+            {
+                Uploads.Remove(Request.RemoteEndPoint.Address.ToString());
+                return Json(new { success = false, reason = "Chunk too large." });
+            }
+            upload.PartialData += part;
+            Console.WriteLine("Recieved {0} byte long chunk, awaiting {1} more bytes", part.Length, upload.FinalLength - upload.PartialData.Length);
+            if (upload.PartialData.Length >= upload.FinalLength)
+            {
+                // Song is done uploading
+                Console.WriteLine("Song uploaded: " + upload.Filename);
+                Uploads.Remove(Request.RemoteEndPoint.Address.ToString());
+                return Json(new { success = true, complete = true });
+            }
+            return Json(new { success = true, complete = false });
+        }
+
+        private static Dictionary<string, UploadInProgress> Uploads = new Dictionary<string, UploadInProgress>();
+        private class UploadInProgress
+        {
+            public string PartialData { get; set; }
+            public string Filename { get; set; }
+            public long FinalLength { get; set; }
         }
     }
 }

@@ -10,13 +10,46 @@
         <script src="/js/jquery-2.0.3.js" type="text/javascript"></script>
         <script src="/js/bootstrap.min.js" type="text/javascript"></script>
         <script src="/js/knockout-2.2.1.js" type="text/javascript"></script>
-        @*TODO: Don't include modals or script when user is logged in*@
         @RenderSection("scripts", false)
     </head>
     <body>
         <div class="container">
             @RenderPage("_Navigation.cshtml", skipLayout: true)
             @RenderBody()
+        </div>
+        <div class="modal hide fade" id="upload">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3>Upload a Song</h3>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-error" data-bind="visible: uploadError">
+                    <strong>Error: </strong><span data-bind="text: uploadError"></span>
+                </div>
+                <div class="alert alert-success" data-bind="visible: uploadSuccess">
+                    <strong>Success! </strong>Thanks for expanding our library!</span>
+                </div>
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#mp3">MP3</a></li>
+                    <li><a data-toggle="tab" href="#youtube">YouTube</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="mp3">
+                        <div class="well upload-well" id="upload-target"
+                            data-bind="text: fileName() == '' ? 'Drag and drop your mp3 file here' : ( uploadReady() ? 'Ready to upload ' + fileName() : 'Preparing ' + fileName() )">
+                        </div>
+                        <p>Please make sure your file uses the "Artist Name - Song Title.mp3" naming format.</p>
+                    </div>
+                    <div class="tab-pane" id="youtube">
+                        Uploading YouTube videos is still in development and not yet available.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <i class="icon-refresh" data-bind="visible: uploading"></i>
+              <a href="#" class="btn" data-dismiss="modal" data-bind="enable: !uploading(), attr: { disabled: uploading() }">Close</a>
+              <a href="#" class="btn btn-primary" data-bind="click: uploadSong, enable: uploadReady() && !uploading(), attr: { disabled: !uploadReady() || uploading() }">Upload</a>
+            </div>
         </div>
     </body>
 </html>
