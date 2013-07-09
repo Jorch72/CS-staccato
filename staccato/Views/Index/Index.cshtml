@@ -26,7 +26,10 @@
                     data-bind="visible: groupPlay() && skipRequested(), text: skipsRequested() + '/' + skipsRequired()" href="#" disabled="disabled"></a>
             </span>
             <span class="span2">
-            <a class="btn btn-info input-block-level" data-bind="visible: !groupPlay(), click: getNowPlaying" href="#">Rejoin Group</a>
+                <a class="btn btn-info input-block-level" data-bind="visible: !groupPlay(), click: getNowPlaying" href="#">Rejoin Group</a>
+                <div data-bind="visible: groupPlay() && skipsRequested() != 0 && !skipRequested()" style="margin-top: 4px;">
+                    <strong>Skip? </strong><span data-bind="text: skipsRequested() + '/' + skipsRequired() + ' votes'"></span>
+                </div>
             </span>
         </div>
         <h2>Song Search</h2>
