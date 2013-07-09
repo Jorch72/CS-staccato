@@ -151,6 +151,8 @@ namespace staccato
                 Duration = duration,
                 UserAdded = true
             };
+            if (MasterQueue.Any(s => s.Name == song.Name))
+                return;
             UserQueue.Enqueue(song);
         }
 
