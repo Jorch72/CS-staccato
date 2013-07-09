@@ -187,8 +187,12 @@ $(function() {
     document.body.addEventListener('keypress', function(e) {
         if (document.activeElement.tagName == 'INPUT')
             return;
+        console.log(e.keyCode);
         if (e.keyCode == 32) { // space
            viewModel.togglePlayback();
+        }
+        if (!viewModel.groupPlay() && e.keyCode == 114) { // r
+            viewModel.getNowPlaying();
         }
     });
 
