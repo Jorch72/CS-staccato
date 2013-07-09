@@ -105,8 +105,11 @@ function PageViewModel () {
         $.post('/requestSong', {
             song: data.Name
         }, function(data) {
-            $(this).attr('disabled', 'disabled');
+            $(event.target).attr('disabled', 'disabled');
             self.queue(data.queue);
+            if (!data.canRequest) {
+                $('#searchTable a.btn-info').attr('disabled', 'disabled');
+            }
         });
     };
     

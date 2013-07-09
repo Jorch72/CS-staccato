@@ -18,6 +18,7 @@ namespace staccato
             UserQueue = new ConcurrentQueue<Song>();
             ActiveListeners = new List<Tuple<string, DateTime>>();
             SkipRequests = new List<string>();
+            UserRequests = new Dictionary<string, List<DateTime>>();
             Listeners = 0;
             Timer = new Timer(Tick);
             for (int i = 0; i < 10; i++)
@@ -34,6 +35,7 @@ namespace staccato
         private static Random Random { get; set; }
         private static List<Tuple<string, DateTime>> ActiveListeners { get; set; }
         private static List<string> SkipRequests { get; set; }
+        private static Dictionary<string, List<DateTime>> UserRequests { get; set; }
 
         public static Song[] MasterQueue
         {
@@ -139,7 +141,10 @@ namespace staccato
             AutoQueue.Enqueue(song);
         }
 
-        public static void QueueUserSong(string mp3)
+        /// <summary>
+        /// Returns true if the user can request another song.
+        /// </summary>
+        public static bool QueueUserSong(string mp3, IPEndPoint remoteEndPoint)
         {
             var file = new AudioFile(mp3);
             var duration = file.Properties.Duration;
@@ -152,8 +157,26 @@ namespace staccato
                 UserAdded = true
             };
             if (MasterQueue.Any(s => s.Name == song.Name))
-                return;
+                return true;
+            var user = remoteEndPoint.Address.ToString();
+            if (!UserRequests.ContainsKey(user))
+            {
+                UserRequests[user] = new List<DateTime>();
+                UserRequests[user].Add(DateTime.Now);
+            }
+            else
+            {
+                foreach (var item in UserRequests[user].ToArray())
+                {
+                    if (item.AddMinutes(Program.Configuration.RequestLimitResetMinutes) < DateTime.Now)
+                        UserRequests[user].Remove(item);
+                }
+                if (UserRequests[user].Count >= Program.Configuration.MaximumRequestsPerUser)
+                    return false;
+                UserRequests[user].Add(DateTime.Now);
+            }
             UserQueue.Enqueue(song);
+            return UserRequests[user].Count < Program.Configuration.MaximumRequestsPerUser;
         }
 
         public static void QueueRandomSong()
@@ -162,10 +185,23 @@ namespace staccato
             QueueSong(files[Random.Next(files.Length)]);
         }
 
-        public static void QueueRandomUserSong()
+        public static void QueueRandomUserSong(IPEndPoint remoteEndPoint)
         {
             var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3", SearchOption.AllDirectories);
-            QueueUserSong(files[Random.Next(files.Length)]);
+            QueueUserSong(files[Random.Next(files.Length)], remoteEndPoint);
+        }
+
+        public static bool CanUserRequest(IPEndPoint remoteEndPoint)
+        {
+            var user = remoteEndPoint.Address.ToString();
+            if (!UserRequests.ContainsKey(user))
+                return true;
+            foreach (var item in UserRequests[user].ToArray())
+            {
+                if (item.AddMinutes(Program.Configuration.RequestLimitResetMinutes) < DateTime.Now)
+                    UserRequests[user].Remove(item);
+            }
+            return UserRequests[user].Count < Program.Configuration.MaximumRequestsPerUser;
         }
     }
 

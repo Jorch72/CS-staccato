@@ -10,6 +10,8 @@ namespace staccato
             EndPoint = "0.0.0.0";
             Port = 8888;
             SkipThreshold = 0.51;
+            MaximumRequestsPerUser = 3;
+            RequestLimitResetMinutes = 60;
         }
 
         public string MusicPath { get; set; }
@@ -17,6 +19,8 @@ namespace staccato
         public string EndPoint { get; set; }
         public int Port { get; set; }
         public double SkipThreshold { get; set; }
+        public int MaximumRequestsPerUser { get; set; }
+        public int RequestLimitResetMinutes { get; set; }
     }
 }
 

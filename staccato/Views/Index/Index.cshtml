@@ -6,10 +6,12 @@
 <div class="row">
     <div class="span6">
         <h2>Queue <small data-bind="visible: !groupPlay()">(Not in group)</small></h2>
-        <table class="table table-condensed" data-bind="foreach: queue, css: { 'no-group': !groupPlay() }">
-            <tr>
-                <td><a class="queue-item" data-bind="text: Name, click: $parent.changeSong, attr: { title: Name }, css: { 'user-added': UserAdded }" href="#"></a></td>
-            </tr>
+        <table class="table table-condensed">
+            <tbody data-bind="foreach: queue, css: { 'no-group': !groupPlay() }">
+                <tr>
+                    <td><a class="queue-item" data-bind="text: Name, click: $parent.changeSong, attr: { title: Name }, css: { 'user-added': UserAdded }" href="#"></a></td>
+                </tr>
+            </tbody>
         </table>
     </div>
     <div class="span6">
@@ -45,7 +47,7 @@
     </div>
 </div>
 
-<table class="table table-condensed" style="margin-top: 10px;">
+<table class="table table-condensed" style="margin-top: 10px;" id="searchTable">
     <tbody data-bind="foreach: searchResults">
         <tr>
             <td style="vertical-align: middle; width: 80%;"><a href="#" data-bind="text: Name, click: $parent.changeSong"></a></td>

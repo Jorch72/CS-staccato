@@ -34,6 +34,7 @@ namespace staccato
             var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3")
                 .OrderBy(Path.GetFileNameWithoutExtension)
                 .Where(f => Path.GetFileNameWithoutExtension(f).ToUpper().Contains(query)).ToArray();
+            bool canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint);
 
             return Json(new {
                 results = files
@@ -43,7 +44,7 @@ namespace staccato
                         Name = Path.GetFileNameWithoutExtension(f),
                         Download = "/download/" + Path.GetFileName(f),
                         Stream = Path.GetFileName(f),
-                        CanRequest = !MusicRunner.MasterQueue.Any(s => s.Name.Equals(Path.GetFileNameWithoutExtension(f)))
+                        CanRequest = canRequest && !MusicRunner.MasterQueue.Any(s => s.Name.Equals(Path.GetFileNameWithoutExtension(f)))
                     }).ToArray(),
                 totalPages = files.Count() / 10
             });
@@ -57,8 +58,12 @@ namespace staccato
             song = Path.Combine(Program.Configuration.MusicPath, song + ".mp3");
             if (!File.Exists(song))
                 return Json(new { success = false });
-            MusicRunner.QueueUserSong(song);
-            return Json(new { success = true, queue = MusicRunner.MasterQueue.Take(8) });
+            return Json(new 
+            {
+                success = MusicRunner.QueueUserSong(song, Request.RemoteEndPoint),
+                canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint), 
+                queue = MusicRunner.MasterQueue.Take(8)
+            });
         }
 
         public ActionResult RequestSkip()
