@@ -49,10 +49,41 @@ namespace staccato
             MusicRunner.Start();
             httpd.Start(new IPEndPoint(IPAddress.Parse(Configuration.EndPoint), Configuration.Port));
 
-            Console.WriteLine("Press 'q' to exit.");
-            ConsoleKeyInfo cki;
-            do cki = Console.ReadKey(true);
-            while (cki.KeyChar != 'q');
+            Console.WriteLine("Type 'quit' to exit, or 'help' for help.");
+            string command = null;
+            while (command != "quit")
+            {
+                command = Console.ReadLine();
+                HandleCommand(command);
+            }
+        }
+
+        public static void HandleCommand(string command)
+        {
+            var name = command;
+            var parameters = string.Empty;
+            if (name.Contains(" "))
+            {
+                parameters = name.Substring(name.IndexOf(' ') + 1);
+                name = name.Remove(name.IndexOf(' '));
+            }
+            switch (name.ToUpper())
+            {
+                case "ANNOUNCE":
+                    if (parameters.Length == 0)
+                        Console.WriteLine("Use 'announce <text goes here>' to make an announcement.");
+                    else
+                        MusicRunner.Announcement = parameters;
+                    break;
+                case "UNANNOUNCE":
+                    MusicRunner.Announcement = null;
+                    break;
+                case "QUIT":
+                    break;
+                default:
+                    Console.WriteLine("Unknown command.");
+                    break;
+            }
         }
     }
 }

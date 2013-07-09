@@ -18,6 +18,7 @@ function PageViewModel () {
     self.skipsRequired = ko.observable(1);
     self.skipRequested = ko.observable(false);
     self.listeners = ko.observable(1);
+    self.announcement = ko.observable('');
     
     self.getNowPlaying = function() {
         $.get('/nowplaying', function(data) {
@@ -114,6 +115,7 @@ function PageViewModel () {
             self.queue(data.queue);
             self.skipsRequested(data.skipsRequested);
             self.skipsRequired(data.skipsRequired);
+            self.announcement(data.announcement);
             self.listeners(data.listeners);
             if (self.groupPlay() && self.name() != data.song.Name) {
                 // Song skipped
@@ -141,14 +143,21 @@ function PageViewModel () {
                 self.queue(data.queue);
                 seek = data.seek;
                 self.skipRequested(false);
-                self.skipsRequested(data.skipsRequested);
-                self.skipsRequired(data.skipsRequired);
                 changeStream(data.song.Stream, true);
-            } else {
-                self.skipsRequested(data.skipsRequested);
-                self.skipsRequired(data.skipsRequired);
             }
+            self.skipsRequested(data.skipsRequested);
+            self.skipsRequired(data.skipsRequired);
         });
+    };
+    
+    self.togglePlayback = function() {
+        var player = document.getElementById('player');
+        if (player.paused) {
+            player.play();
+        } else {
+            player.pause();
+        }
+        self.groupPlay(false);
     };
 }
 
@@ -171,6 +180,13 @@ $(function() {
     });
     player.addEventListener('ended', function() {
         viewModel.prepareNext();
+    });
+    document.body.addEventListener('keypress', function(e) {
+        if (document.activeElement.tagName == 'INPUT')
+            return;
+        if (e.keyCode == 32) { // space
+           viewModel.togglePlayback();
+        }
     });
 
     viewModel.getNowPlaying();

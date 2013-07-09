@@ -29,6 +29,7 @@ namespace staccato
         public static ConcurrentQueue<Song> AutoQueue { get; set; }
         public static DateTime StartTime { get; private set; }
         public static int Listeners { get; private set; }
+        public static string Announcement { get; set; }
         private static Timer Timer { get; set; }
         private static Random Random { get; set; }
         private static List<Tuple<string, DateTime>> ActiveListeners { get; set; }

@@ -23,7 +23,7 @@
             <span class="span2">
                 <a class="btn btn-warning input-block-level" data-bind="click: requestSkip, visible: groupPlay() && !skipRequested()" href="#">Vote to Skip</a>
                 <a class="btn btn-warning input-block-level" 
-                    data-bind="visible: groupPlay() && skipRequested(), text: skipsRequested() + '/' + skipsRequired()" href="#" disabled></a>
+                    data-bind="visible: groupPlay() && skipRequested(), text: skipsRequested() + '/' + skipsRequired()" href="#" disabled="disabled"></a>
             </span>
             <span class="span2">
             <a class="btn btn-info input-block-level" data-bind="visible: !groupPlay(), click: getNowPlaying" href="#">Rejoin Group</a>
@@ -38,6 +38,7 @@
                 <input type="submit" class="btn btn-primary input-block-level" value="Search" style="width: 100%;" />
             </div>
         </form>
+        <div data-bind="visible: announcement" class="alert"><strong>Notice: </strong><span data-bind="text: announcement"></span></div>
     </div>
 </div>
 

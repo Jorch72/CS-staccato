@@ -23,7 +23,8 @@ namespace staccato
                 queue = MusicRunner.MasterQueue.Take(8),
                 skipsRequested = MusicRunner.SkipRequestsIssued,
                 skipsRequired = MusicRunner.SkipRequestsRequired,
-                listeners = MusicRunner.Listeners
+                listeners = MusicRunner.Listeners,
+                announcement = MusicRunner.Announcement
             });
         }
 
