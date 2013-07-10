@@ -10,11 +10,13 @@ namespace staccato
     {
         public IrcClient Client { get; set; }
         public string[] PreviousSearchResults { get; set; }
+        private bool ShowNowPlaying { get; set; }
 
         public IrcBot()
         {
             Client = new IrcClient(Program.Configuration.Irc.Server, new IrcUser(
                 Program.Configuration.Irc.Nick, Program.Configuration.Irc.User, Program.Configuration.Irc.Password));
+            ShowNowPlaying = true;
         }
 
         public void Start()
@@ -27,7 +29,7 @@ namespace staccato
 
         public void AnnounceSong(Song nowPlaying)
         {
-            if (!Program.Configuration.Irc.AnnounceNowPlaying)
+            if (!Program.Configuration.Irc.AnnounceNowPlaying || !ShowNowPlaying)
                 return;
             var message = string.Format("Now Playing: {0} ({1}:{2:00}) - {3}",
                 nowPlaying.Name,
@@ -36,6 +38,7 @@ namespace staccato
                 GetSiteUrl());
             foreach (var channel in Client.Channels)
                 channel.SendMessage(message);
+            ShowNowPlaying = false;
         }
 
         public void Announce(string announcement)
@@ -76,6 +79,7 @@ namespace staccato
 
         public void HandleChannelMessageRecieved(object sender, PrivateMessageEventArgs e)
         {
+            ShowNowPlaying = true; // We only show now playing if we weren't the last one to speak. This reduces clutter in the channel.
             try
             {
                 if (e.PrivateMessage.Message.StartsWith("~"))
