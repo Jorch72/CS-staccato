@@ -32,10 +32,10 @@ namespace staccato
         public static DateTime StartTime { get; private set; }
         public static int Listeners { get; private set; }
         public static string Announcement { get; set; }
+        public static List<string> SkipRequests { get; set; }
         private static Timer Timer { get; set; }
         private static Random Random { get; set; }
         private static List<Tuple<string, DateTime>> ActiveListeners { get; set; }
-        private static List<string> SkipRequests { get; set; }
         private static Dictionary<string, List<DateTime>> UserRequests { get; set; }
         private static Dictionary<string, DateTime> UploadTimes { get; set; }
 
@@ -74,6 +74,8 @@ namespace staccato
             SkipRequests.Clear();
             StartTime = DateTime.Now;
             Console.WriteLine("Now playing: {0} ({1}:{2})", song.Name, song.Duration.Minutes, song.Duration.Seconds.ToString("00"));
+            if (Program.Configuration.Irc.Enabled)
+                Program.IrcBot.AnnounceSong(song);
             UpdateListeners();
             Timer.Change(Timeout.Infinite, Timeout.Infinite);
             Timer = new Timer(Tick, null, (int)(song.Duration).TotalMilliseconds, Timeout.Infinite);
@@ -89,22 +91,22 @@ namespace staccato
             Listeners = ActiveListeners.Count;
         }
 
-        public static void UpdateListener(IPEndPoint remoteEndPoint)
+        public static void UpdateListener(string user)
         {
-            var listener = ActiveListeners.SingleOrDefault(l => l.Item1.Equals(remoteEndPoint.Address.ToString()));
+            var listener = ActiveListeners.SingleOrDefault(l => l.Item1.Equals(user));
             ActiveListeners.Remove(listener);
-            listener = new Tuple<string, DateTime>(remoteEndPoint.Address.ToString(), DateTime.Now);
+            listener = new Tuple<string, DateTime>(user, DateTime.Now);
             ActiveListeners.Add(listener);
             Listeners = ActiveListeners.Count;
         }
 
-        public static bool RequestSkip(IPEndPoint remoteEndPoint)
+        public static bool RequestSkip(string user)
         {
             if (((StartTime + NowPlaying.Duration) - DateTime.Now).TotalSeconds < 10)
                 return false;
-            if (SkipRequests.Contains(remoteEndPoint.Address.ToString()))
+            if (SkipRequests.Contains(user))
                 return false;
-            SkipRequests.Add(remoteEndPoint.Address.ToString());
+            SkipRequests.Add(user);
             if (SkipRequestsIssued >= SkipRequestsRequired)
             {
                 Console.WriteLine("Skipping {0}", NowPlaying.Name);
@@ -146,7 +148,7 @@ namespace staccato
         /// <summary>
         /// Returns true if the user can request another song.
         /// </summary>
-        public static bool QueueUserSong(string mp3, IPEndPoint remoteEndPoint)
+        public static bool QueueUserSong(string mp3, string user)
         {
             var file = new AudioFile(mp3);
             var duration = file.Properties.Duration;
@@ -160,7 +162,6 @@ namespace staccato
             };
             if (MasterQueue.Any(s => s.Name == song.Name))
                 return true;
-            var user = remoteEndPoint.Address.ToString();
             if (!UserRequests.ContainsKey(user))
             {
                 UserRequests[user] = new List<DateTime>();
@@ -188,15 +189,14 @@ namespace staccato
             QueueSong(files[Random.Next(files.Length)]);
         }
 
-        public static void QueueRandomUserSong(IPEndPoint remoteEndPoint)
+        public static void QueueRandomUserSong(string user)
         {
             var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3", SearchOption.AllDirectories);
-            QueueUserSong(files[Random.Next(files.Length)], remoteEndPoint);
+            QueueUserSong(files[Random.Next(files.Length)], user);
         }
 
-        public static bool CanUserRequest(IPEndPoint remoteEndPoint)
+        public static bool CanUserRequest(string user)
         {
-            var user = remoteEndPoint.Address.ToString();
             if (!UserRequests.ContainsKey(user))
                 return true;
             foreach (var item in UserRequests[user].ToArray())
@@ -207,11 +207,11 @@ namespace staccato
             return UserRequests[user].Count < Program.Configuration.MaximumRequestsPerUser;
         }
 
-        public static int MinutesUntilNextUpload(IPEndPoint remoteEndPoint)
+        public static int MinutesUntilNextUpload(string user)
         {
-            if (!UploadTimes.ContainsKey(remoteEndPoint.Address.ToString()))
+            if (!UploadTimes.ContainsKey(user))
                 return 0;
-            var minutes = (UploadTimes[remoteEndPoint.Address.ToString()].AddMinutes(Program.Configuration.MinimumMinutesBetweenUploads) - DateTime.Now).TotalMinutes;
+            var minutes = (UploadTimes[user].AddMinutes(Program.Configuration.MinimumMinutesBetweenUploads) - DateTime.Now).TotalMinutes;
             if (minutes <= 0)
                 return 0;
             return (int)minutes;

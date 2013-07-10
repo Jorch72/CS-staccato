@@ -1,0 +1,36 @@
+@using staccato
+@using ChatSharp
+<h1>IRC Help</h1>
+@if (!Program.Configuration.Irc.Enabled) {
+    <p>IRC is not enabled for this server.</p>
+} else {
+    <p>Staccato is currently running a bot in these channels:</p>
+    <ul>
+        @foreach (var channel in Program.IrcBot.Client.Channels)
+        {
+            <li>@channel.Name</li>
+        }
+    </ul>
+    if (Program.Configuration.Irc.AnnounceNowPlaying) {
+        <p>The bot's name is @Program.Configuration.Irc.Nick, and will announce new songs as they start playing.</p>
+    } else {
+        <p>The bot's name is @Program.Configuration.Irc.Nick.</p>
+    }
+    <p>You can use various commands to interact with the bot. Simply say these commands in the channel:</p>
+    <dl>
+        <dt>~help</dt>
+        <dd>Links to this page.</dd>
+        <dt>~np</dt>
+        <dd>Displays the current song.</dd>
+        <dt>~q</dt>
+        <dd>Shows a few items from the top of the queue.</dd>
+        <dt>~r [song/id]</dt>
+        <dd>Requests a song. Use the song name, or the number shown in search results.</dd>
+        <dt>~s [terms]</dt>
+        <dd>Searches for [terms] and shows a few results.</dd>
+        <dt>~sr [terms]</dt>
+        <dd>Searches for [terms] and requests the first result.</dd>
+        <dt>~skip</dt>
+        <dd>Requests to skip the current song.</dd>
+    </dl>
+}

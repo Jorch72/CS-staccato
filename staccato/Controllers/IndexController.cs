@@ -13,13 +13,18 @@ namespace staccato
 
         public ActionResult Index()
         {
-            MusicRunner.UpdateListener(Request.RemoteEndPoint);
+            MusicRunner.UpdateListener(Request.RemoteEndPoint.Address.ToString());
+            return View();
+        }
+
+        public ActionResult IrcHelp()
+        {
             return View();
         }
 
         public ActionResult NowPlaying()
         {
-            MusicRunner.UpdateListener(Request.RemoteEndPoint);
+            MusicRunner.UpdateListener(Request.RemoteEndPoint.Address.ToString());
             return Json(new
             {
                 song = MusicRunner.NowPlaying,
@@ -38,7 +43,7 @@ namespace staccato
             var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3")
                 .OrderBy(Path.GetFileNameWithoutExtension)
                 .Where(f => Path.GetFileNameWithoutExtension(f).ToUpper().Contains(query)).ToArray();
-            bool canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint);
+            bool canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint.Address.ToString());
 
             return Json(new {
                 results = files
@@ -64,8 +69,8 @@ namespace staccato
                 return Json(new { success = false });
             return Json(new 
             {
-                success = MusicRunner.QueueUserSong(song, Request.RemoteEndPoint),
-                canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint), 
+                success = MusicRunner.QueueUserSong(song, Request.RemoteEndPoint.Address.ToString()),
+                canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint.Address.ToString()), 
                 queue = MusicRunner.MasterQueue.Take(8)
             });
         }
@@ -74,7 +79,7 @@ namespace staccato
         {
             return Json(new
             {
-                success = MusicRunner.RequestSkip(Request.RemoteEndPoint),
+                success = MusicRunner.RequestSkip(Request.RemoteEndPoint.Address.ToString()),
                 song = MusicRunner.NowPlaying,
                 queue = MusicRunner.MasterQueue.Take(8),
                 seek = (DateTime.Now - MusicRunner.StartTime).TotalSeconds,
@@ -95,7 +100,7 @@ namespace staccato
                 return Json(new { success = false, reason = "File name is not in \"Artist Name - Song Title.mp3\" format." });
             if (File.Exists(Path.Combine(Program.Configuration.MusicPath, filename)))
                 return Json(new { success = false, reason = "This song is already in our library." });
-            var minutes = MusicRunner.MinutesUntilNextUpload(Request.RemoteEndPoint);
+            var minutes = MusicRunner.MinutesUntilNextUpload(Request.RemoteEndPoint.Address.ToString());
             if (minutes > 0)
                 return Json(new { success = false, reason = string.Format("You need to wait another {0} minutes before you can upload again.", minutes) });
 
@@ -115,7 +120,7 @@ namespace staccato
                 return Json(new { success = false, error = "File name is not in \"Artist Name - Song Title.mp3\" format." });
             if (File.Exists(Path.Combine(Program.Configuration.MusicPath, filename)))
                 return Json(new { success = false, error = "This song is already in our library." });
-            var minutes = MusicRunner.MinutesUntilNextUpload(Request.RemoteEndPoint);
+            var minutes = MusicRunner.MinutesUntilNextUpload(Request.RemoteEndPoint.Address.ToString());
             if (minutes < 0)
                 return Json(new { success = false, error = string.Format("You need to wait another {0} minutes before you can upload again.", minutes) });
             Uploads.Add(Request.RemoteEndPoint.Address.ToString(), new UploadInProgress

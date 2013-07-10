@@ -151,8 +151,7 @@ function PageViewModel () {
                 changeStream(data.song.Stream, true);
                 self.skipRequested(false);
             }
-            setTimeout(self.refreshQueue, updateDelay);
-        });
+        }).always(function() { setTimeout(self.refreshQueue, updateDelay); });
     };
     setTimeout(self.refreshQueue, updateDelay);
     

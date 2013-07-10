@@ -46,12 +46,17 @@
     <Reference Include="taglib-sharp">
       <HintPath>..\lib\taglib-sharp.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Controllers\IndexController.cs" />
     <Compile Include="MusicRunner.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="IrcBot.cs" />
+    <Compile Include="Views\Index\IrcHelp.cs">
+      <DependentUpon>IrcHelp.cshtml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -62,6 +67,10 @@
     <ProjectReference Include="..\externals\WebSharp\WebSharp.MVC\WebSharp.MVC.csproj">
       <Project>{87E9AFC2-B2CE-4214-AFEE-55BCF5F8254B}</Project>
       <Name>WebSharp.MVC</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\externals\ChatSharp\ChatSharp\ChatSharp.csproj">
+      <Project>{4033AFFA-BEA3-4BDF-84EA-59A23360FD36}</Project>
+      <Name>ChatSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -119,6 +128,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Static\img\glyphicons-halflings-white.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Views\Index\IrcHelp.cshtml">
+      <Generator>RazorTemplatePreprocessor</Generator>
+      <LastGenOutput>IrcHelp.cs</LastGenOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

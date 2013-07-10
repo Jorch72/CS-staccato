@@ -14,6 +14,7 @@ namespace staccato
     public class Program
     {
         public static Configuration Configuration;
+        public static IrcBot IrcBot;
 
         public static void Main(string[] args)
         {
@@ -27,6 +28,8 @@ namespace staccato
             JsonConvert.PopulateObject(File.ReadAllText("config.json"), Configuration);
             File.WriteAllText("config.json", JsonConvert.SerializeObject(Configuration, Formatting.Indented));
 
+            if (Configuration.Irc.Enabled)
+                IrcBot = new IrcBot();
             var httpd = new HttpServer();
             var router = new HttpRouter();
             httpd.LogRequests = Configuration.LogRequests;
@@ -50,6 +53,8 @@ namespace staccato
 
             MusicRunner.Start();
             httpd.Start(new IPEndPoint(IPAddress.Parse(Configuration.EndPoint), Configuration.Port));
+            if (Configuration.Irc.Enabled)
+                IrcBot.Start();
 
             Console.WriteLine("Type 'quit' to exit, or 'help' for help.");
             string command = null;
@@ -58,6 +63,13 @@ namespace staccato
                 command = Console.ReadLine();
                 HandleCommand(command);
             }
+        }
+
+        public static void Announce(string announcement)
+        {
+            MusicRunner.Announcement = announcement;
+            if (Configuration.Irc.Enabled)
+                IrcBot.Announce(announcement);
         }
 
         public static void HandleCommand(string command)
@@ -75,7 +87,7 @@ namespace staccato
                     if (parameters.Length == 0)
                         Console.WriteLine("Use 'announce <text goes here>' to make an announcement.");
                     else
-                        MusicRunner.Announcement = parameters;
+                        Announce(parameters);
                     break;
                 case "UNANNOUNCE":
                     MusicRunner.Announcement = null;

@@ -1,3 +1,6 @@
 [submodule "externals/WebSharp"]
 	path = externals/WebSharp
 	url = git://github.com/SirCmpwn/WebSharp.git
+[submodule "externals/ChatSharp"]
+	path = externals/ChatSharp
+	url = git://github.com/SirCmpwn/ChatSharp.git
