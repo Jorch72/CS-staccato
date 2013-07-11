@@ -41,6 +41,19 @@ namespace staccato
             ShowNowPlaying = false;
         }
 
+        public void AnnounceRequest(Song requestedSong)
+        {
+            if (!Program.Configuration.Irc.AnnounceNowPlaying)
+                return;
+            var message = string.Format("Requested: {0} ({1}:{2:00}) - {3}",
+                requestedSong.Name,
+                requestedSong.Duration.Minutes,
+                requestedSong.Duration.Seconds,
+                GetSiteUrl());
+            foreach (var channel in Client.Channels)
+                channel.SendMessage(message);
+        }
+
         public void Announce(string announcement)
         {
             foreach (var channel in Client.Channels)
@@ -135,8 +148,9 @@ namespace staccato
                                     Client.SendMessage("You need to wait a while before you can request again.", e.PrivateMessage.Source);
                                 else
                                 {
+                                    Song song;
                                     MusicRunner.QueueUserSong(Path.Combine(Program.Configuration.MusicPath, PreviousSearchResults[index]),
-                                        e.PrivateMessage.User.Hostname);
+                                        e.PrivateMessage.User.Hostname, out song);
                                     Client.SendMessage(Path.GetFileNameWithoutExtension(PreviousSearchResults[index]) + 
                                         " has been added to the queue.", e.PrivateMessage.Source);
                                 }
@@ -155,8 +169,9 @@ namespace staccato
                                         Client.SendMessage("You need to wait a while before you can request again.", e.PrivateMessage.Source);
                                     else
                                     {
+                                        Song song;
                                         MusicRunner.QueueUserSong(Path.Combine(Program.Configuration.MusicPath, file),
-                                            e.PrivateMessage.User.Hostname);
+                                            e.PrivateMessage.User.Hostname, out song);
                                         Client.SendMessage(Path.GetFileNameWithoutExtension(file) + 
                                             " has been added to the queue.", e.PrivateMessage.Source);
                                     }

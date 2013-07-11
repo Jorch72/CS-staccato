@@ -67,9 +67,13 @@ namespace staccato
             song = Path.Combine(Program.Configuration.MusicPath, song + ".mp3");
             if (!File.Exists(song))
                 return Json(new { success = false });
+            Song requestedSong;
+            bool success = MusicRunner.QueueUserSong(song, Request.RemoteEndPoint.Address.ToString(), out requestedSong);
+            if (Program.Configuration.Irc.Enabled && success)
+                Program.IrcBot.AnnounceRequest(requestedSong);
             return Json(new 
             {
-                success = MusicRunner.QueueUserSong(song, Request.RemoteEndPoint.Address.ToString()),
+                success,
                 canRequest = MusicRunner.CanUserRequest(Request.RemoteEndPoint.Address.ToString()), 
                 queue = MusicRunner.MasterQueue.Take(8)
             });

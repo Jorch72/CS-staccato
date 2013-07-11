@@ -148,11 +148,11 @@ namespace staccato
         /// <summary>
         /// Returns true if the user can request another song.
         /// </summary>
-        public static bool QueueUserSong(string mp3, string user)
+        public static bool QueueUserSong(string mp3, string user, out Song song)
         {
             var file = new AudioFile(mp3);
             var duration = file.Properties.Duration;
-            var song = new Song
+            song = new Song
             {
                 Name = Path.GetFileNameWithoutExtension(mp3),
                 Stream = "/" + Path.GetFileName(mp3),
@@ -160,7 +160,8 @@ namespace staccato
                 Duration = duration,
                 UserAdded = true
             };
-            if (MasterQueue.Any(s => s.Name == song.Name))
+            var name = song.Name;
+            if (MasterQueue.Any(s => s.Name == name))
                 return true;
             if (!UserRequests.ContainsKey(user))
             {
@@ -192,7 +193,8 @@ namespace staccato
         public static void QueueRandomUserSong(string user)
         {
             var files = Directory.GetFiles(Program.Configuration.MusicPath, "*.mp3", SearchOption.AllDirectories);
-            QueueUserSong(files[Random.Next(files.Length)], user);
+            Song song;
+            QueueUserSong(files[Random.Next(files.Length)], user, out song);
         }
 
         public static bool CanUserRequest(string user)
